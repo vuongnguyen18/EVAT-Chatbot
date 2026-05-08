@@ -1,6 +1,14 @@
 version: "3.1"
 
 rules:
+# ============================
+# GLOBAL INTERRUPT RULE (ADDED)
+# ============================
+- rule: GLOBAL override — congestion prediction interrupt
+  condition: []
+  steps:
+  - intent: ask_congestion_prediction
+  - action: action_congestion_prediction
 
 # Greeting rule
 - rule: Greet user

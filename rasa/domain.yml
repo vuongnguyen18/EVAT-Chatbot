@@ -27,6 +27,7 @@ intents:
   # Advanced directions intent
   - get_advanced_directions
   - get_directions
+  - ask_congestion_prediction
 
 entities:
   - menu_option
@@ -42,6 +43,7 @@ entities:
   - price
   - power_level
   - station_id
+  - location
 
 slots:
   menu_option:
@@ -181,6 +183,25 @@ slots:
     mappings:
       - type: custom
 
+  previous_context:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: custom
+
+  location:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: location
+
+  station_name:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_text
+
 responses:
   utter_goodbye:
     - text: "Goodbye! Have a great journey! 🚗⚡"
@@ -213,6 +234,9 @@ actions:
   # Route info action
   - action_handle_route_info
   - action_get_directions_by_id
+  - action_congestion_prediction
+  - action_store_previous_context
+  - action_restore_previous_context
 
 session_config:
   session_expiration_time: 60

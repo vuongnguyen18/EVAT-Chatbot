@@ -70,6 +70,15 @@ nlu:
     - journey planning
     - trip planning
 
+    - to [Box Hill](end_location)
+    - to [Richmond](end_location)
+    - to [Carlton](end_location)
+    - to [Southbank](end_location)
+    - go to [Box Hill](end_location)
+    - drive to [Richmond](end_location)
+    - route to [Southbank](end_location)
+    - from [Melbourne](start_location) to [Box Hill](end_location)
+
 - intent: emergency_charging
   examples: |
     - battery low
@@ -201,112 +210,38 @@ nlu:
 
 - intent: route_station_selection
   examples: |
-    - [station_name]
-    - [Malvern Central](station_name)
-    - Malvern Central
-    - Swinburne University - TC Building
     - Tesla Supercharger Box Hill
-    - City of Stonnington
-    - Forest Hill Chase Shopping Centre
-    - Swinburne University - TC Building
     - Telsa Supercharger Box Hill
+    - Mont Albert
+    - Forest Hill Chase Shopping Centre
+    - Exploren Charging Station
+    - Engie - The Glen
     - Malvern Central
-    - [Lynbrook Village](station_name)
-    - [RMIT - City Campus](station_name)
-    - [ENGIE - Victoria Gardens](station_name)
-    - [Swinburne University - TC Building](station_name)
-    - [Camberwell Supercharger](station_name)
-    - [Chadstone Shopping Centre](station_name)
-    - [Tesla Supercharger South Melbourne](station_name)
-    - [High Street](station_name)
-    - [Evie Portland](station_name)
-    - [North Bellarine Aquatic Centre](station_name)
-    - Collingwood Library
-    - Monash Caufield
-    - ENGIE - Chadstone 2
-      - Malvern Central
-    - Lynbrook Village
+    - Swinburne University - TC Building
     - RMIT - City Campus
     - Camberwell Supercharger
     - Chadstone Shopping Centre
     - Tesla Supercharger South Melbourne
-    - ENGIE - Victoria Gardens
-    - Swinburne University - TC Building
-    - High Street
     - Evie Portland
     - North Bellarine Aquatic Centre
-    - 100 St Kilda Road
     - Collingwood Library
-    - Exploren Charging Station
-    - Fleming Park
     - Monash Caufield
-    - Mont Albert
-    - Exploren Charging Station
-    - ENGIE - Chadstone 2
-    - Engie - The Glen
-    - Bayside Gateway
-    - Tesla Supercharger Brighton East
-    - Chargefox - Barnawartha North
+    - Lynbrook Village
     - Chargefox - Euroa
-    - 11 Nicholson Street
-    - Lorbek Luxury Cars
-    - JET Charge Office
-    - Evie Richmond Library
-    - Woolworths Fishermans Bend
-    - Middy's Port Melbourne
-    - Ampcharge Barkly Square
-    - GET Electric Head Office
+    - Chargefox - Barnawartha North
     - Brunswick EV Hub
     - David Street Car Park
-    - RMIT Brunswick
-    - The Parade Ascot Vale Car Park
     - Moonee Ponds Central
     - St Kilda Town Hall
-    - City of Stonnington
-    - Forest Hill Chase Shopping Centre
-    - Swinburne University - TC Building
-    - Tesla Supercharger Box Hill
-    - Malvern Central
-    - Telsa Supercharger Box Hill
     - Coburg Civic Centre / Moreland City
     - Coburg Town Hall / Moreland City
-    - Austin Tower Carpark Level B1
-    - Coburg North EV Fast Charge
     - Oak Park Sports & Aquatic Centre
     - Toyota Altona
-    - CB Smith Reserve
-    - Hobsons Bay Civic Centre
-    - Chargefox Airport West
-    - Tesla Supercharger Campbellfield
-    - Ampol Foodary Altona North
-    - Bridge Street
-    - Tesla Supercharger Box Hill
-    - Evie Glen Gala Village
-    - Keilor Central
-    - Tesla Supercharger Oakleigh Repair Centre
-    - Bayside Council
-    - Jolt Cheltenham
-    - Uni Hill Town Centre
-    - Greensborough Plaza
-    - Watermarc Carpark (LG)
-    - Brimbank Shopping Centre
-    - Southland Medical Centre
-    - Research Way - N1 Carpark monash
-    - Ampol Derrimut
-    - Jolt Black Rock
-    - BP Northpoint
-    - Eltham Leisure Centre
     - BP pulse Diamond Creek
-    - BP Pulse
     - Shell Coles Express Taylors Lakes
-    - Watergardens Shopping Centre
     - Point Cook Town Centre
     - Red Rooster Vermont
     - Greenvale Woolworths
-    - Engie - The Glen
-    - Bayside Gateway
-    - Tesla Supercharger Brighton East
-    - Chargefox - Barnawartha North
 
 # Enhanced preference filtering intent
 - intent: filter_by_preferences
@@ -622,6 +557,45 @@ nlu:
     - finish please
     - end please
 
+- intent: ask_congestion_prediction
+  examples: |
+    - congestion prediction
+    - give me a congestion prediction
+    - can you predict congestion
+    - show me congestion prediction
+    - I want congestion prediction
+    - predict congestion
+    - check congestion
+    - traffic congestion prediction
+    - check traffic congestion
+    - current traffic congestion
+    - what is the congestion level
+    - what is the crowd level
+    - is it busy
+    - is it crowded
+    - how busy is it
+    - how crowded is it
+
+    - predict congestion for [Box Hill](location)
+    - give me congestion prediction for [Richmond](location)
+    - congestion prediction for [Carlton](location)
+    - congestion prediction to [Box Hill](location)
+    - traffic congestion prediction for [Southbank](location)
+    - traffic congestion to [Port Melbourne](location)
+    - congestion at [Brunswick](location)
+    - check congestion at [Dandenong](location)
+    - congestion status at [Geelong](location)
+    - congestion forecast for [Ballarat](location)
+    - crowd prediction for [Bendigo](location)
+
+    - is [Box Hill](location) busy
+    - is [Richmond](location) busy right now
+    - is [Carlton](location) crowded
+    - is [Southbank](location) congested
+    - how busy is [Port Melbourne](location)
+    - how crowded is [Brunswick](location)
+    - how much congestion is there at [Dandenong](location)
+    - check how busy [Geelong](location) is
 
 - lookup: charging_speed
   examples: |
@@ -755,3 +729,184 @@ nlu:
     - Point Cook Town Centre
     - Red Rooster Vermont
     - Greenvale Woolworths
+
+- lookup: congestion
+  examples: |
+    - crowded
+    - busy
+    - heavy traffic
+    - traffic jam
+    - jammed
+    - packed
+    - full
+    - overloaded
+    - high density
+    - high crowd level
+    - high occupancy
+    - heavy load
+    - high usage
+
+# This synonym lookup allows the model to recognize different variations of "Box Hill" as the same location entity, improving the accuracy of congestion predictions for that location.
+- synonym: Box Hill
+  examples: |
+    - boxhill
+    - Boxhill
+    - box hill
+    - Box Hill
+    - boxhil
+    - box hil
+
+- synonym: Richmond
+  examples: |
+    - rich
+    - richmond
+    - Richmond
+
+- synonym: Carlton
+  examples: |
+    - carl
+    - carlton
+    - Carlton
+
+- synonym: Southbank
+  examples: |
+    - south bank
+    - South Bank
+    - southbank
+    - Southbank
+
+- synonym: Port Melbourne
+  examples: |
+    - port melbourne
+    - Port Melbourne
+    - portmelbourne
+    - Portmelbourne
+
+- synonym: Brunswick
+  examples: |
+    - brunswick
+    - Brunswick
+    - bruns
+    - bruns wick
+
+- synonym: Dandenong
+  examples: |
+    - dandy
+    - dandenong
+    - Dandenong
+
+- synonym: Geelong
+  examples: |
+    - geelong
+    - Geelong
+
+- synonym: Ballarat
+  examples: |
+    - ballarat
+    - Ballarat
+
+- synonym: Bendigo
+  examples: |
+    - bendigo
+    - Bendigo
+
+- synonym: Melbourne
+  examples: |
+    - mel
+    - melb
+    - melbourne
+    - Melbourne
+    - melbourne cbd
+    - Melbourne CBD
+    - cbd
+    - CBD
+
+- synonym: St Kilda
+  examples: |
+    - stkilda
+    - Stkilda
+    - st kilda
+    - St Kilda
+    - saint kilda
+    - Saint Kilda
+
+- synonym: Glen Waverley
+  examples: |
+    - glen waverley
+    - Glen Waverley
+    - glenwaverley
+    - Glenwaverley
+
+- synonym: Chadstone
+  examples: |
+    - chaddy
+    - chadstone
+    - Chadstone
+
+- synonym: Docklands
+  examples: |
+    - dockland
+    - Dockland
+    - docklands
+    - Docklands
+
+- synonym: Hawthorn
+  examples: |
+    - hawthorn
+    - Hawthorn
+
+- synonym: Camberwell
+  examples: |
+    - camberwell
+    - Camberwell
+
+- synonym: Brighton
+  examples: |
+    - brighton
+    - Brighton
+
+- synonym: Cheltenham
+  examples: |
+    - cheltenham
+    - Cheltenham
+
+- synonym: Bundoora
+  examples: |
+    - bundoora
+    - Bundoora
+
+- synonym: Frankston
+  examples: |
+    - frankston
+    - Frankston
+
+- synonym: Werribee
+  examples: |
+    - werribee
+    - Werribee
+
+- synonym: Ringwood
+  examples: |
+    - ringwood
+    - Ringwood
+
+- synonym: Point Cook
+  examples: |
+    - point cook
+    - Point Cook
+    - pointcook
+    - Pointcook
+
+- synonym: Sunshine West
+  examples: |
+    - sunshine west
+    - Sunshine West
+    - sunshinewest
+    - Sunshinewest
+
+- synonym: Airport West
+  examples: |
+    - airport west
+    - Airport West
+    - airportwest
+    - Airportwest

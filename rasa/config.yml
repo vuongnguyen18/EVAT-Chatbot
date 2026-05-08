@@ -9,6 +9,10 @@ language: en
 pipeline:
   - name: WhitespaceTokenizer
   - name: RegexFeaturizer
+    case_sensitive: false
+    use_lookup_tables: true
+    use_regexes: true
+    use_word_boundaries: true
   - name: LexicalSyntacticFeaturizer
   - name: CountVectorsFeaturizer
   - name: CountVectorsFeaturizer

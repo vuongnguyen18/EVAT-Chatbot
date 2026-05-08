@@ -1,7 +1,7 @@
 from rasa_sdk import Action, Tracker
 from rasa_sdk.events import SlotSet, FollowupAction
 from rasa_sdk.executor import CollectingDispatcher
-from typing import Any, Text, Dict, List, Optional, Tuple
+from typing import Any, Text, Dict, List, Optional, Tuple, Optional
 from urllib.parse import quote_plus
 import logging
 
@@ -2301,3 +2301,333 @@ class ActionEnhancedPreferenceFiltering(Action):
             )
             return [SlotSet("conversation_context", ConversationContexts.ENDED)]
         return []
+
+# ============================================================
+# NEW ACTIONS FOR INTERRUPT + RESUME FLOW
+# ============================================================
+
+class ActionStorePreviousContext(Action):
+    def name(self) -> Text:
+        return "action_store_previous_context"
+
+    def run(self, dispatcher, tracker, domain):
+        current_context = tracker.get_slot("conversation_context")
+        return [SlotSet("previous_context", current_context)]
+
+
+class ActionRestorePreviousContext(Action):
+    def name(self) -> Text:
+        return "action_restore_previous_context"
+
+    def run(self, dispatcher, tracker, domain):
+        prev = tracker.get_slot("previous_context")
+        return [SlotSet("conversation_context", prev)]
+
+
+def _normalise_congestion_location(location: Optional[str]) -> Optional[str]:
+    """
+    Normalise location text for congestion prediction only.
+
+    This helper only runs inside action_congestion_prediction.
+    It does not affect route planning, emergency charging, preference charging,
+    get directions, or other flows.
+    """
+    if not location:
+        return None
+
+    value = str(location).strip()
+    value = value.strip(" ?.,!")
+
+    if not value:
+        return None
+
+    compact = value.lower().replace(" ", "").replace("-", "")
+
+    congestion_aliases = {
+        # Demo-critical
+        "boxhill": "Box Hill",
+        "boxhil": "Box Hill",
+        "boxhills": "Box Hill",
+
+        # Melbourne / CBD
+        "mel": "Melbourne",
+        "melb": "Melbourne",
+        "melboune": "Melbourne",
+        "melbournecbd": "Melbourne",
+        "cbd": "Melbourne",
+        "city": "Melbourne",
+        "thecity": "Melbourne",
+
+        # Common short forms
+        "rich": "Richmond",
+        "carl": "Carlton",
+
+        # Inner Melbourne
+        "southbank": "Southbank",
+        "portmelbourne": "Port Melbourne",
+        "brunswick": "Brunswick",
+        "brunswickeast": "Brunswick East",
+        "stkilda": "St Kilda",
+        "saintkilda": "St Kilda",
+        "dockland": "Docklands",
+        "docklands": "Docklands",
+
+        # Popular suburbs
+        "glenwaverley": "Glen Waverley",
+        "chadstone": "Chadstone",
+        "chaddy": "Chadstone",
+        "hawthorn": "Hawthorn",
+        "camberwell": "Camberwell",
+        "brighton": "Brighton",
+        "cheltenham": "Cheltenham",
+        "bundoora": "Bundoora",
+        "frankston": "Frankston",
+        "werribee": "Werribee",
+        "ringwood": "Ringwood",
+        "pointcook": "Point Cook",
+        "sunshinewest": "Sunshine West",
+        "airportwest": "Airport West",
+
+        # Spacing variants
+        "gleniris": "Glen Iris",
+        "oakleighsouth": "Oakleigh South",
+        "malverneast": "Malvern East",
+        "brightoneast": "Brighton East",
+        "mooneeponds": "Moonee Ponds",
+        "ascotvale": "Ascot Vale",
+        "foresthill": "Forest Hill",
+        "deerpark": "Deer Park",
+        "carolinesprings": "Caroline Springs",
+        "taylorslakes": "Taylors Lakes",
+        "taylorlakes": "Taylors Lakes",
+        "roxburghpark": "Roxburgh Park",
+        "dandenongnorth": "Dandenong North",
+        "cranbournewest": "Cranbourne West",
+        "clydenorth": "Clyde North",
+        "carrumdowns": "Carrum Downs",
+        "yarraglen": "Yarra Glen",
+        "geelongwest": "Geelong West",
+        "armstrongcreek": "Armstrong Creek",
+        "waurnponds": "Waurn Ponds",
+
+        # Regional / common
+        "dandenong": "Dandenong",
+        "dandy": "Dandenong",
+        "geelong": "Geelong",
+        "ballarat": "Ballarat",
+        "bendigo": "Bendigo",
+        "shepparton": "Shepparton",
+        "wodonga": "Wodonga",
+        "wangaratta": "Wangaratta",
+        "traralgon": "Traralgon",
+    }
+
+    if compact in congestion_aliases:
+        return congestion_aliases[compact]
+
+    return value
+
+
+def _extract_congestion_location(tracker: Tracker) -> Optional[str]:
+    """
+    Extract location only for congestion-related messages.
+
+    Important:
+    This intentionally does NOT extract generic 'to <location>',
+    because 'to boxhill' should remain route planning / route input.
+    """
+
+     # 1. Use latest-message entities first to avoid stale slot values.
+    entities = tracker.latest_message.get("entities", []) or []
+
+    for ent in entities:
+        if ent.get("entity") in [
+            "location",
+            "destination",
+            "suburb",
+            "station_name",
+            "end_location",
+        ]:
+            value = _normalise_congestion_location(ent.get("value"))
+            if value:
+                return value
+
+    # 2. Slot fallback only after checking latest entities.
+    for slot_name in ["location", "end_location"]:
+        value = _normalise_congestion_location(tracker.get_slot(slot_name))
+        if value:
+            return value
+
+    # 3. Regex fallback for congestion-specific language only.
+    text = tracker.latest_message.get("text", "") or ""
+    text = text.strip()
+
+    if not text:
+        return None
+
+    import re
+
+    patterns = [
+        r"\bcongestion\s+prediction\s+(?:to|for|at|near|in|around)\s+(.+)$",
+        r"\btraffic\s+congestion\s+(?:to|for|at|near|in|around)\s+(.+)$",
+        r"\bcongestion\s+(?:to|for|at|near|in|around)\s+(.+)$",
+        r"\bcheck\s+congestion\s+(?:to|for|at|near|in|around)\s+(.+)$",
+        r"\bpredict\s+congestion\s+(?:to|for|at|near|in|around)\s+(.+)$",
+        r"\bforecast\s+congestion\s+(?:to|for|at|near|in|around)\s+(.+)$",
+        r"\bcrowd\s+prediction\s+(?:to|for|at|near|in|around)\s+(.+)$",
+        r"\bcrowd\s+level\s+(?:to|for|at|near|in|around)\s+(.+)$",
+        r"\bhow\s+busy\s+is\s+(.+)$",
+        r"\bhow\s+crowded\s+is\s+(.+)$",
+        r"\bis\s+(.+?)\s+(?:busy|crowded|congested)\b",
+        r"\bis\s+there\s+heavy\s+congestion\s+(?:to|for|at|near|in|around)\s+(.+)$",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            candidate = _normalise_congestion_location(match.group(1))
+            if candidate:
+                return candidate
+
+    return None
+
+class ActionCongestionPrediction(Action):
+    def name(self) -> Text:
+        return "action_congestion_prediction"
+
+    def run(self, dispatcher, tracker, domain):
+
+        location = _extract_congestion_location(tracker)
+
+        if not location:
+            dispatcher.utter_message(
+                text=(
+                    "Which Melbourne suburb or charging location would you like "
+                    "a congestion prediction for?"
+                )
+            )
+            return []
+        
+        location_coords = None
+
+        try:
+            location_coords = data_service._get_location_coordinates(location)
+        except Exception as e:
+            print(f"Error validating congestion location: {e}")
+
+        if not location_coords:
+            dispatcher.utter_message(
+                text=(
+                    f"❌ I couldn't find **{location}** in the current Melbourne/Victoria dataset.\n\n"
+                    "Please try a supported suburb or charging location, such as "
+                    "Box Hill, Richmond, Carlton, Southbank, Port Melbourne, Brunswick, "
+                    "Dandenong, Geelong, Ballarat, or Bendigo."
+                )
+            )
+            return []
+
+        # ================================
+        # ⭐ Identify START LOCATION
+        # ================================
+        start_location = None
+
+        if tracker.get_slot("start_location"):
+            start_location = tracker.get_slot("start_location")
+
+        elif tracker.get_slot("current_location"):
+            start_location = tracker.get_slot("current_location")
+
+        elif tracker.get_slot("user_lat") and tracker.get_slot("user_lng"):
+            start_location = (
+                tracker.get_slot("user_lat"),
+                tracker.get_slot("user_lng")
+            )
+
+        # If no start location → show error message
+        if not start_location:
+            dispatcher.utter_message(
+                text="I need your starting location to find charging stations."
+            )
+            return []
+
+        # ================================
+        # ⭐ Get real CONGESTION
+        # ================================
+        congestion_value = None
+
+        if REAL_TIME_INTEGRATION_AVAILABLE and real_time_manager:
+            try:
+                traffic = real_time_manager.get_traffic_conditions(
+                    start_location,
+                    location
+                )
+
+                if traffic:
+                    congestion_value = traffic.get("congestion_level")
+
+            except Exception as e:
+                print(f"Error getting real-time congestion: {e}")
+
+        if isinstance(congestion_value, int):
+            level_labels = {
+                0: "Free-flow",
+                1: "Light congestion",
+                2: "Moderate congestion",
+                3: "Heavy congestion"
+            }
+
+            congestion_text = level_labels.get(congestion_value, "Unknown")
+
+            dispatcher.utter_message(
+                text=f"🚦 Current congestion level for **{location}** is **{congestion_text}**."
+            )
+        else:
+            dispatcher.utter_message(
+                text=f"⚠️ Real-time congestion data for **{location}** is unavailable right now."
+            )
+
+        # ================================
+        # ⭐ Recall ROUTE PLANNING
+        # ================================
+        try:
+            stations = data_service.get_route_stations(
+                start_location,
+                location
+            )
+
+            if stations:
+                _send_station_cards(dispatcher, stations, limit=10)
+
+                response = f"⚡ Found {len(stations)} charging stations from **{start_location}** to **{location}**:\n\n"
+                for i, station in enumerate(stations[:5]):
+                    response += f"**{i+1}. {station.get('name')}**\n"
+                    response += f"⚡ {station.get('power')} | 💰 {station.get('cost')}\n\n"
+
+                response += "Type a station name to choose one."
+
+                dispatcher.utter_message(text=response)
+
+                return [
+                    SlotSet("start_location", start_location),
+                    SlotSet("end_location", location),
+                    SlotSet("conversation_context", ConversationContexts.ROUTE_PLANNING_RESULTS)
+                ]
+
+            else:
+                dispatcher.utter_message(
+                    text=f"No charging stations found for route to {location}."
+                )
+                return []
+
+        except Exception:
+            dispatcher.utter_message(
+                text="⚠️ Error retrieving stations for this location."
+            )
+            return [
+                SlotSet("start_location", start_location),
+                SlotSet("end_location", location),
+                SlotSet("conversation_context", ConversationContexts.ROUTE_PLANNING_RESULTS),
+                SlotSet("previous_context", ConversationContexts.ROUTE_PLANNING_RESULTS)
+            ]
+
+

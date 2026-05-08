@@ -1,0 +1,31 @@
+version: "3.1"
+
+nlu:
+- lookup: location
+  examples: |
+    - Box Hill
+    - Richmond
+    - Carlton
+    - Southbank
+    - Port Melbourne
+    - Brunswick
+    - Dandenong
+    - Geelong
+    - Ballarat
+    - Bendigo
+    - Melbourne
+    - St Kilda
+    - Glen Waverley
+    - Chadstone
+    - Docklands
+    - Hawthorn
+    - Camberwell
+    - Brighton
+    - Cheltenham
+    - Bundoora
+    - Frankston
+    - Werribee
+    - Ringwood
+    - Point Cook
+    - Sunshine West
+    - Airport West
