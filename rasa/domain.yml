@@ -28,6 +28,7 @@ intents:
   - get_advanced_directions
   - get_directions
   - ask_congestion_prediction
+  - get_charging_insights
 
 entities:
   - menu_option
@@ -237,6 +238,7 @@ actions:
   - action_congestion_prediction
   - action_store_previous_context
   - action_restore_previous_context
+  - action_charging_insights
 
 session_config:
   session_expiration_time: 60

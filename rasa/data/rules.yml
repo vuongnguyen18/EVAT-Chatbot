@@ -282,3 +282,7 @@ rules:
   - intent: nlu_fallback
   - action: action_handle_emergency_location_input
 
+- rule: Get charging insights
+  steps:
+    - intent: get_charging_insights
+    - action: action_charging_insights

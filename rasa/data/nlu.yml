@@ -597,6 +597,29 @@ nlu:
     - how much congestion is there at [Dandenong](location)
     - check how busy [Geelong](location) is
 
+- intent: get_charging_insights
+  examples: |
+    - charging insights
+    - show me charging insights
+    - give me charging insights
+    - when is the best time to charge
+    - when should I charge
+    - what time should I charge
+    - when is this station busy
+    - when is this charger busy
+    - when is this charging station busy
+    - what are the peak charging hours
+    - what are the quiet charging hours
+    - when is it less busy
+    - when is it quiet
+    - is this station busy now
+    - is this charger busy now
+    - tell me the best charging time
+    - recommend a charging time
+    - when should I use this station
+    - when should I avoid charging
+    - what time is best for charging
+
 - lookup: charging_speed
   examples: |
     - slow
